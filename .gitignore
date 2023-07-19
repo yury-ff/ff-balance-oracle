@@ -1,0 +1,8 @@
+/node_modules
+.env
+/build
+/models
+client.js
+test.js
+sendTx.js
+txs-tracker.js
