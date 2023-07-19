@@ -4,30 +4,14 @@
   "description": "",
   "main": "client.js",
   "scripts": {
-    "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy:oracle": "cd oracle && npx truffle migrate --network extdev --reset -all && cd ..",
-    "deploy:caller": "cd bank && npx truffle migrate --network extdev --reset -all && cd ..",
-    "deploy:all": "npm run deploy:oracle && npm run deploy:bank"
+    "start": "node app.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "alchemy-sdk": "^2.9.1",
     "axios": "^1.4.0",
-    "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
     "ethers": "^5.4",
-    "express": "^4.18.2",
-    "fs": "^0.0.1-security",
-    "googleapis": "^120.0.0",
-    "loom-js": "^1.90.0",
-    "loom-truffle-provider": "^0.13.0",
-    "mongodb": "4.1",
-    "mongoose": "^6.0.8",
-    "nodemailer": "^6.9.3",
-    "process": "^0.11.10",
-    "validator": "^13.9.0",
-    "web3": "^4.0.1"
+    "express": "^4.18.2"
   }
 }
