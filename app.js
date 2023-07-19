@@ -1,3 +1,6 @@
+const express = require("express");
+const app = express();
+
 const axios = require("axios");
 const BN = require("bn.js");
 const { ethers } = require("ethers");
@@ -148,13 +151,20 @@ async function init() {
   return { oracleContract };
 }
 
-(async () => {
-  const { oracleContract } = await init();
-  process.on("SIGINT", () => {
-    console.log("Calling client.disconnect()");
-    process.exit();
-  });
-  setInterval(async () => {
-    await processQueue(oracleContract);
-  }, SLEEP_INTERVAL);
-})();
+const port = process.env.PORT || 4000;
+
+const start = async () => {
+  try {
+    const { oracleContract } = await init();
+    setInterval(async () => {
+      await processQueue(oracleContract);
+    }, SLEEP_INTERVAL);
+    app.listen(port, () =>
+      console.log(`Server is listening on port ${port}...`)
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+start();
