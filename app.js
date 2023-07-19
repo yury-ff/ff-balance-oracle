@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 
 const axios = require("axios");
-const BN = require("bn.js");
 const { ethers } = require("ethers");
 require("dotenv").config();
 
@@ -121,7 +120,7 @@ async function setUserBalance(
   amount
 ) {
   // const idInt = new BN(parseInt(id));
-  const userBalanceInt = new BN(parseInt(userBalance));
+  // const userBalanceInt = new BN(parseInt(userBalance));
   const amountInt = parseInt(amount);
   const callerAddress = process.env.BANK_ADDRESS.toString();
   // console.log(
