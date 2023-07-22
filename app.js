@@ -4,6 +4,7 @@ const app = express();
 const axios = require("axios");
 const { ethers } = require("ethers");
 require("dotenv").config();
+const BN = require("bn.js");
 
 // const common = require("./common.js");
 
@@ -13,7 +14,7 @@ const CHUNK_SIZE = process.env.CHUNK_SIZE || 3;
 const MAX_RETRIES = process.env.MAX_RETRIES || 5;
 const OracleJSON = require("./BalanceOracleABI.json");
 const oracleAddress = process.env.ORACLE_ADDRESS;
-const url = "https://server.forkedfinance.xyz";
+const url = "https://server.forkedfinance.xyz/api/v1/balances";
 let pendingRequests = [];
 
 async function retrieveUpdatedUserBalance(userAddress) {
@@ -37,9 +38,9 @@ async function filterEvents(oracleContract) {
     let info = {
       address: address,
       id: id,
-      value: ethers.utils.formatUnits(value, 6),
+      value: JSON.parse(value, null, 2),
     };
-    const amount = JSON.parse(info.value);
+    const amount = ethers.utils.formatUnits(value, 6);
     console.log(
       "* New Update User Balance Event. Amount: " +
         amount +
@@ -104,7 +105,13 @@ async function processRequest(oracleContract, userAddress, id, amount) {
       return;
     } catch (error) {
       if (retries === MAX_RETRIES - 1) {
-        await setUserBalance(oracleContract, "0", id, amount);
+        await setUserBalance(
+          oracleContract,
+          parseInt("0"),
+          userAddress,
+          id,
+          amount
+        );
         return;
       }
       retries++;
@@ -119,23 +126,13 @@ async function setUserBalance(
   id,
   amount
 ) {
-  // const idInt = new BN(parseInt(id));
-  // const userBalanceInt = new BN(parseInt(userBalance));
-  const amountInt = parseInt(amount);
   const callerAddress = process.env.BANK_ADDRESS.toString();
-  // console.log(
-  //   userBalance,
-  //   "userAddress " + userAddress.toString(),
-  //   "callerAddress " + callerAddress,
-  //   parseInt(id),
-  //   amount
-  // );
   try {
     await oracleContract.setUserBalance(
       userBalance,
       userAddress.toString(),
       callerAddress,
-      parseInt(id),
+      id,
       amount
     );
   } catch (error) {
