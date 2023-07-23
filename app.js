@@ -38,7 +38,7 @@ async function filterEvents(oracleContract) {
     let info = {
       address: address,
       id: id,
-      value: JSON.parse(value, null, 2),
+      value: value,
     };
     const amount = ethers.utils.formatUnits(value, 6);
     console.log(
@@ -58,10 +58,10 @@ async function filterEvents(oracleContract) {
       let info = {
         balance: userBalance,
         address: userAddress,
-        value: ethers.utils.formatUnits(value, 6),
+        value: value,
       };
-      const amount = JSON.parse(info.value);
-      const balance = JSON.parse(info.balance);
+      const amount = ethers.utils.formatUnits(value, 6);
+      const balance = ethers.utils.formatUnits(userBalance, 6);
       console.log(
         "* New Set User Balance Event. Amount: " +
           amount +
