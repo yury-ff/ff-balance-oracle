@@ -1,12 +1,9 @@
 const express = require("express");
 const app = express();
-
 const axios = require("axios");
 const { ethers } = require("ethers");
-require("dotenv").config();
-const BN = require("bn.js");
 
-// const common = require("./common.js");
+require("dotenv").config();
 
 const SLEEP_INTERVAL = process.env.SLEEP_INTERVAL || 2000;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
@@ -27,7 +24,7 @@ async function retrieveUpdatedUserBalance(userAddress) {
 
 async function getOracleContract() {
   const provider = new ethers.providers.JsonRpcProvider(
-    `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
+    `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
   );
   const signer = new ethers.Wallet(PRIVATE_KEY, provider);
   return new ethers.Contract(oracleAddress, OracleJSON, signer);
@@ -128,13 +125,14 @@ async function setUserBalance(
 ) {
   const callerAddress = process.env.BANK_ADDRESS.toString();
   try {
-    await oracleContract.setUserBalance(
-      userBalance,
-      userAddress.toString(),
-      callerAddress,
-      id,
-      amount
-    );
+    // await oracleContract.setUserBalance(
+    //   userBalance,
+    //   userAddress.toString(),
+    //   callerAddress,
+    //   id,
+    //   amount
+    // );
+    console.log("all working");
   } catch (error) {
     console.log("Error encountered while calling setUserBalance " + error);
     // Do some error handling
