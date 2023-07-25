@@ -125,14 +125,13 @@ async function setUserBalance(
 ) {
   const callerAddress = process.env.BANK_ADDRESS.toString();
   try {
-    // await oracleContract.setUserBalance(
-    //   userBalance,
-    //   userAddress.toString(),
-    //   callerAddress,
-    //   id,
-    //   amount
-    // );
-    console.log("all working");
+    await oracleContract.setUserBalance(
+      userBalance,
+      userAddress.toString(),
+      callerAddress,
+      id,
+      amount
+    );
   } catch (error) {
     console.log("Error encountered while calling setUserBalance " + error);
     // Do some error handling
