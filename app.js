@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const axios = require("axios");
-const { ethers } = require("ethers");
+const { ethers, JsonRpcProvider } = require("ethers");
 
 require("dotenv").config();
 
@@ -11,7 +11,10 @@ const CHUNK_SIZE = process.env.CHUNK_SIZE || 3;
 const MAX_RETRIES = process.env.MAX_RETRIES || 5;
 const OracleJSON = require("./BalanceOracleABI.json");
 const oracleAddress = process.env.ORACLE_ADDRESS;
-const url = "https://server.forkedfinance.xyz/api/v1/balances";
+
+const url = "https://ff-backend-y8on.onrender.com/api/v1/balances";
+// const url = "http://localhost:4000/api/v1/balances";
+
 let pendingRequests = [];
 
 async function retrieveUpdatedUserBalance(userAddress) {
@@ -24,10 +27,21 @@ async function retrieveUpdatedUserBalance(userAddress) {
 
 async function getOracleContract() {
   const provider = new ethers.providers.JsonRpcProvider(
-    `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
+    `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
   );
   const signer = new ethers.Wallet(PRIVATE_KEY, provider);
   return new ethers.Contract(oracleAddress, OracleJSON, signer);
+}
+
+async function test() {
+  const provider = new ethers.providers.JsonRpcProvider(
+    `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
+  );
+  const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+  const oracleContract = new ethers.Contract(oracleAddress, OracleJSON, signer);
+
+  console.log(signer);
+  return await oracleContract.owner();
 }
 
 async function filterEvents(oracleContract) {
@@ -37,10 +51,10 @@ async function filterEvents(oracleContract) {
       id: id,
       value: value,
     };
-    const amount = ethers.utils.formatUnits(value, 6);
+    // const amount = ethers.utils.formatUnits(value, 6);
     console.log(
       "* New Update User Balance Event. Amount: " +
-        amount +
+        value +
         " with id " +
         id +
         " at address: " +
@@ -57,13 +71,12 @@ async function filterEvents(oracleContract) {
         address: userAddress,
         value: value,
       };
-      const amount = ethers.utils.formatUnits(value, 6);
-      const balance = ethers.utils.formatUnits(userBalance, 6);
+
       console.log(
         "* New Set User Balance Event. Amount: " +
-          amount +
+          info.value +
           " with a total balance of " +
-          balance +
+          info.balance +
           " at address: " +
           info.address
       );
@@ -123,12 +136,12 @@ async function setUserBalance(
   id,
   amount
 ) {
-  const callerAddress = process.env.BANK_ADDRESS.toString();
+  // const callerAddress = process.env.BANK_ADDRESS.toString();
   try {
-    await oracleContract.setUserBalance(
+    await oracleContract.updateAmountsAndUnstake(
       userBalance,
       userAddress.toString(),
-      callerAddress,
+      // callerAddress,
       id,
       amount
     );
@@ -144,7 +157,7 @@ async function init() {
   return { oracleContract };
 }
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 4500;
 
 const start = async () => {
   try {
@@ -161,3 +174,4 @@ const start = async () => {
 };
 
 start();
+// test();
