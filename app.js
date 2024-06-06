@@ -12,8 +12,8 @@ const MAX_RETRIES = process.env.MAX_RETRIES || 5;
 const OracleJSON = require("./BalanceOracleABI.json");
 const oracleAddress = process.env.ORACLE_ADDRESS;
 
-const url = "https://ff-backend-y8on.onrender.com/api/v1/balances";
-// const url = "http://localhost:4000/api/v1/balances";
+// const url = "https://ff-backend-y8on.onrender.com/api/v1/balances";
+const url = "http://localhost:4000/api/v1/balances";
 
 let pendingRequests = [];
 
@@ -27,41 +27,35 @@ async function retrieveUpdatedUserBalance(userAddress) {
 
 async function getOracleContract() {
   const provider = new ethers.providers.JsonRpcProvider(
-    `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
+    `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
   );
   const signer = new ethers.Wallet(PRIVATE_KEY, provider);
-  return new ethers.Contract(oracleAddress, OracleJSON, signer);
+  return new ethers.Contract(oracleAddress, OracleJSON.abi, signer);
 }
 
-async function test() {
-  const provider = new ethers.providers.JsonRpcProvider(
-    `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`
-  );
-  const signer = new ethers.Wallet(PRIVATE_KEY, provider);
-  const oracleContract = new ethers.Contract(oracleAddress, OracleJSON, signer);
-
-  console.log(signer);
-  return await oracleContract.owner();
-}
 
 async function filterEvents(oracleContract) {
-  oracleContract.on("UpdateUserBalanceEvent", async (address, id, value) => {
+  oracleContract.removeAllListeners("UpdateUserBalanceEvent");
+  oracleContract.removeAllListeners("SetUserBalanceEvent");
+
+  oracleContract.on("UpdateUserBalanceEvent", async (address, value, onchain ) => {
     let info = {
       address: address,
-      id: id,
       value: value,
+      onchain: onchain,
     };
     // const amount = ethers.utils.formatUnits(value, 6);
     console.log(
       "* New Update User Balance Event. Amount: " +
         value +
         " with id " +
-        id +
+        onchain +
         " at address: " +
         address
     );
     await addRequestToQueue(info);
   });
+
 
   oracleContract.on(
     "SetUserBalanceEvent",
@@ -86,21 +80,22 @@ async function filterEvents(oracleContract) {
 
 async function addRequestToQueue(info) {
   const userAddress = info.address;
-  const id = parseInt(info.id);
   const amount = JSON.parse(info.value);
-  pendingRequests.push({ userAddress, id, amount });
+  const onchain = parseInt(info.onchain);
+
+  pendingRequests.push({ userAddress, amount, onchain});
 }
 
 async function processQueue(oracleContract) {
   let processedRequests = 0;
   while (pendingRequests.length > 0 && processedRequests < CHUNK_SIZE) {
     const req = pendingRequests.shift();
-    await processRequest(oracleContract, req.userAddress, req.id, req.amount);
+    await processRequest(oracleContract, req.userAddress, req.amount, req.onchain);
     processedRequests++;
   }
 }
 
-async function processRequest(oracleContract, userAddress, id, amount) {
+async function processRequest(oracleContract, userAddress, amount, onchain) {
   let retries = 0;
   while (retries < MAX_RETRIES) {
     try {
@@ -109,19 +104,12 @@ async function processRequest(oracleContract, userAddress, id, amount) {
         oracleContract,
         userBalance,
         userAddress,
-        id,
-        amount
+        amount,
+        onchain
       );
       return;
     } catch (error) {
       if (retries === MAX_RETRIES - 1) {
-        await setUserBalance(
-          oracleContract,
-          parseInt("0"),
-          userAddress,
-          id,
-          amount
-        );
         return;
       }
       retries++;
@@ -133,7 +121,6 @@ async function setUserBalance(
   oracleContract,
   userBalance,
   userAddress,
-  id,
   amount
 ) {
   // const callerAddress = process.env.BANK_ADDRESS.toString();
@@ -141,12 +128,10 @@ async function setUserBalance(
     await oracleContract.updateAmountsAndUnstake(
       userBalance,
       userAddress.toString(),
-      // callerAddress,
-      id,
       amount
     );
   } catch (error) {
-    console.log("Error encountered while calling setUserBalance " + error);
+    console.log("Error encountered while calling setUserBalance" + error);
     // Do some error handling
   }
 }
@@ -174,4 +159,4 @@ const start = async () => {
 };
 
 start();
-// test();
+
