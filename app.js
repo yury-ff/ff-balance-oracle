@@ -11,9 +11,7 @@ const CHUNK_SIZE = process.env.CHUNK_SIZE || 3;
 const MAX_RETRIES = process.env.MAX_RETRIES || 5;
 const OracleJSON = require("./BalanceOracleABI.json");
 const oracleAddress = process.env.ORACLE_ADDRESS;
-
-// const url = "https://ff-backend-y8on.onrender.com/api/v1/balances";
-const url = "http://localhost:4000/api/v1/balances";
+const url = process.env.URL;
 
 let pendingRequests = [];
 
